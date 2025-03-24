@@ -97,7 +97,7 @@ def get_gas_data(indice, trade_date):
         query = """
         SELECT TOP 36 * FROM GAS
         WHERE trade_date = ? AND indice = ?
-        ORDER BY trade_date ASC
+        ORDER BY flow_date
         """
         # ORDER BY fecha_creacion ASC
         cursor.execute(query, (trade_date, indice))
