@@ -170,41 +170,49 @@ def store_data():
 def get_all_fees():
     """Retrieve all fee data"""
     try:
-        cursor.execute("SELECT volumen_total, months, fee FROM gas_fee")
+        cursor.execute("SELECT TOP 10 volumen, meses, fee, fee_version FROM gas_fee")
         results = cursor.fetchall()
 
         fees = [
-            {"volumen_total": row[0], "months": row[1], "fee": row[2]}
+            {"volumen": row[0], "meses": row[1], "fee": row[2], "fee_version": row[3]}
             for row in results
         ]
 
-        return jsonify({"availableDates": fees}), 200
+        return jsonify({"fees": fees}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/api/v1/gas/fee/<int:months>", methods=["GET"])
-def get_gas_fee(months):
-    """Retrieve a fee based on months and volumen_total"""
+@app.route("/api/v1/gas/fee/<int:meses>", methods=["GET"])
+def get_gas_fee(meses):
+    """Retrieve a fee based on months and volumen"""
     try:
-        volumen_total = request.args.get("volumen_total", type=int)
+        volumen = request.args.get("volumen", type=int)
 
-        if volumen_total is None:
-            return jsonify({"error": "Missing volumen_total"}), 400
+        if volumen is None:
+            return jsonify({"error": "Missing volumen"}), 400
 
         query = """
-            SELECT TOP 1 fee FROM gas_fee
-            WHERE months >= ? 
-            ORDER BY CASE WHEN volumen_total >= ? THEN 1 ELSE 2 END, volumen_total ASC
+            SELECT TOP 1 id, volumen, meses, fee, fee_version FROM gas_fee
+            WHERE meses >= ? 
+            ORDER BY CASE WHEN volumen >= ? THEN 1 ELSE 2 END, volumen ASC
         """
 
-        cursor.execute(query, (months, volumen_total))
+        cursor.execute(query, (meses, volumen))
         result = cursor.fetchone()
 
         if result is None:
             return jsonify({"error": "No matching fee found"}), 404
 
-        return jsonify({"fee": result[0]})
+        fee = {
+            "id": result[0],
+            "volumen": result[1],
+            "meses": result[2],
+            "fee": result[3],
+            "fee_version": result[4],
+        }
+
+        return jsonify({"fee": fee}), 200
 
     except Exception as e:
         print(f"Error: {e}")  # More detailed error logging
