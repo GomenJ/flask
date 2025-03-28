@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()  # Load environment variables from .env file
 
-app = Flask(__name__, static_folder="build", static_url_path="")
+app = Flask(__name__, static_folder="dist", static_url_path="")
 
 CORS(app)
 
@@ -193,7 +193,7 @@ def get_gas_fee(meses):
             return jsonify({"error": "Missing volumen"}), 400
 
         query = """
-            SELECT TOP 1 id, volumen, meses, fee, fee_version FROM gas_fee
+            SELECT id, volumen, meses, fee, fee_version FROM gas_fee
             WHERE meses >= ? 
             ORDER BY CASE WHEN volumen >= ? THEN 1 ELSE 2 END, volumen ASC
         """
@@ -222,15 +222,6 @@ def get_gas_fee(meses):
 @app.route("/api/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "ok"}), 200
-
-
-# @app.route("/", defaults={"path": ""})
-# @app.route("/<path:path>")
-# def serve(path):
-#     if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
-#         return send_from_directory(app.static_folder, path)
-#     else:
-#         return send_from_directory(app.static_folder, "index.html")
 
 
 @app.route("/", defaults={"path": ""})
