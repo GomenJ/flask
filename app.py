@@ -193,12 +193,21 @@ def get_gas_fee(meses):
             return jsonify({"error": "Missing volumen"}), 400
 
         query = """
-            SELECT id, volumen, meses, fee, fee_version FROM gas_fee
-            WHERE meses >= ? 
-            ORDER BY CASE WHEN volumen >= ? THEN 1 ELSE 2 END, volumen ASC
+            SELECT id, volumen, meses, fee, fee_version
+            FROM gas_fee
+            WHERE volumen = (
+                SELECT MAX(volumen)
+                FROM gas_fee
+                WHERE volumen <= ?
+            )
+            AND meses = (
+                SELECT MIN(meses)
+                FROM gas_fee
+                WHERE meses >= ?
+            );
         """
 
-        cursor.execute(query, (meses, volumen))
+        cursor.execute(query, (volumen, meses))
         result = cursor.fetchone()
 
         if result is None:
