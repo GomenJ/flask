@@ -20,9 +20,6 @@ DATABASE = os.getenv("DATABASE")
 USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 CONN_STR = f"DRIVER=ODBC Driver 17 for SQL Server;SERVER={SERVER};DATABASE={DATABASE};UID={USERNAME};PWD={PASSWORD}"
-# Define the allowed table names and their structure (for validation and query building)
-# Using a dictionary helps map endpoint names to actual table names if they differ,
-# and confirms the table is one we expect to handle.
 
 
 def get_db():
@@ -272,70 +269,6 @@ def store_data():
         return jsonify({"error": str(e)}), 500
 
 
-# @app.route("/api/v1/offers", methods=["POST"])
-# def store_offers():
-#     conn = get_db()
-#
-#     # 2. Check if connection was successful
-#     if conn is None:
-#         # Connection failed during get_db() or config was bad
-#         return jsonify(
-#             {"error": "Database service unavailable"}
-#         ), 503  # 503 Service Unavailable is appropriate
-#
-#     try:
-#         if not request.is_json:
-#             return jsonify({"error": "Invalid JSON format"}), 400
-#
-#         data_list = request.get_json()
-#         # WARNING: This code is insecure and vulnerable to SQL injection attacks
-#         query = """
-#         INSERT INTO cotizaciones (trade_date, flow_date, indice, precio, fuente, usuario, fecha_creacion, fecha_actualizacion)
-#         VALUES
-#         """
-#
-#         if not isinstance(data_list, list):
-#             return jsonify({"error": "Expected a list of data objects"}), 400
-#
-#         values_to_insert = ""  # List to hold the values for the multi-insert
-#
-#         for data in data_list:
-#             try:
-#                 trade_date = data.get("tradeDate")
-#                 flow_date = data.get("flowDate")
-#                 indice = data.get("indice")
-#                 precio = data.get("precio")
-#                 fuente = data.get("fuente")
-#                 usuario = data.get("usuario")
-#                 fecha_creacion = data.get("fechaCreacion")
-#                 fecha_actualizacion = data.get("fechaActualizacion")
-#
-#                 values_to_insert += f"('{trade_date}', '{flow_date}', '{indice}', '{precio}', '{fuente}', '{usuario}', '{fecha_creacion}', '{fecha_actualizacion}'), "
-#
-#             except Exception as inner_e:
-#                 return jsonify(
-#                     {"error": f"Error processing one of the items: {str(inner_e)}"}
-#                 ), 500
-#
-#         if len(values_to_insert) > 1:  # Check if there is data to insert
-#             query += f"{values_to_insert}"
-#             query = query[:-2]
-#
-#             cursor = conn.cursor()
-#
-#             cursor.execute(query)
-#             conn.commit()
-#
-#             return jsonify({"message": "Data inserted successfully"}), 201
-#         else:
-#             return jsonify({"message": "No data to insert"}), 204  # 204 No Content
-#
-#     except Exception as e:
-#         conn.rollback()
-#         print(f"Error processing data list: {e}")
-#         return jsonify({"error": str(e)}), 500
-
-
 @app.route("/api/v1/gas/fee/<int:meses>", methods=["GET"])
 def get_gas_fee(meses):
     """Retrieve a fee based on months and volumen"""
@@ -404,12 +337,8 @@ def serve_index():
     return send_from_directory(app.static_folder, "index.html")
 
 
-# Optional: Catch-all for HTML5 history mode (if using React Router, Vue Router etc.)
-# Place this *after* all your API routes
 @app.errorhandler(404)
 def not_found(e):
-    # If the path doesn't look like a file and isn't an API route,
-    # serve index.html for client-side routing.
     path = request.path
     if "." not in path.split("/")[-1] and not path.startswith("/api/"):
         assert app.static_folder is not None, (
